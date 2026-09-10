@@ -85,3 +85,32 @@ def categorize_transaction(txn, plaid_category=None):
 
     txn.needs_categorization = True
     return False
+
+
+
+def seed_default_categories():
+    defaults = [
+        ('Food & Drink', '🍔'),
+        ('Groceries', '🛒'),
+        ('Coffee', '☕'),
+        ('Transportation', '🚇'),
+        ('Gas & Fuel', '⛽'),
+        ('Travel', '✈️'),
+        ('Utilities', '💡'),
+        ('Entertainment', '🎬'),
+        ('Shopping', '🛍️'),
+        ('Personal Care', '💆'),
+        ('Health & Fitness', '🏋️'),
+        ('Education', '📚'),
+        ('Subscriptions', '📱'),
+        ('Bank Fees', '🏦'),
+        ('Loan Payments', '💸'),
+        ('Income', '💰'),
+        ('Transfer', '↔️'),
+        ('Pharmacy', '💊'),
+        ('Other', '📦'),
+    ]
+    for name, icon in defaults:
+        if not Category.query.filter_by(name=name).first():
+            db.session.add(Category(name=name, icon=icon, is_system=True))
+    db.session.commit()

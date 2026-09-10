@@ -25,4 +25,7 @@ def create_app():
 
         db.create_all()
 
+        from .services.categorizer import seed_default_categories
+        seed_default_categories()
+
     return app
