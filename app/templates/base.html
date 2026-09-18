@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}FinTrack{% endblock %}</title>
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
+    </head>
+    <body>
+        <!-- sidebar and nav here -->
+         <div class="container-fluid">
+            <div class="row">
+                <nav class="col-md-2 bg-dark min-vh-100 p-3">
+                    <a href="{{ url_for('dashboard.index') }}" class="d-block text-white text-decoration-none py-2">Dashboard</a>
+                    <a href="{{ url_for('investments.list_investments') }}" class="d-block text-white text-decoration-none py-2">Investments</a>
+                    <a href="{{ url_for('transactions.list_transactions') }}" class="d-block text-white text-decoration-none py-2">Transactions</a>
+                    <a href="{{ url_for('sync.sync_status') }}" class="d-block text-white text-decoration-none py-2">Sync</a>
+                </nav>
+                <main class="col-md-10">
+                    {% block content %}{% endblock %}
+                </main>
+            </div>
+        </div>
+        
+        <!-- Bootstrap JS (needed for dropdowns, modals etc) -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+    </body>
+</html>
