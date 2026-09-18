@@ -1,0 +1,11 @@
+services:
+  fintrack:
+    build: .
+    container_name: fintrack
+    restart: unless-stopped
+    ports:
+      - "5050:5000"
+    env_file:
+      - .env
+    volumes:
+      - /mnt/JHardDrive/data/jheypicloud/files/Finances:/mnt/JHardDrive/data/jheypicloud/files/Finances
