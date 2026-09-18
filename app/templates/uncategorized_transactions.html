@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Uncategorized Transactions{% endblock %}
+{% block content %}
+
+<h4 class="mb-4">Uncategorized Transactions</h4>
+
+{% if transactions %}
+    {% for transaction in transactions %}
+    <div class="card p-3 mb-3">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <div class="fw-semibold">{{ transaction.merchant_name or transaction.raw_name or 'Unknown' }}</div>
+                <div class="text-muted small">{{ transaction.date }} · ${{ transaction.amount }}</div>
+                <div class="text-muted small">{{ transaction.account.institution }} - {{ transaction.account.account_name }}</div>
+            </div>
+            <div class="col-md-8">
+                <form method="POST" action="{{ url_for('transactions.categorize', txn_id=transaction.id) }}">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-6">
+                            <select name="category_id" class="form-select" required>
+                                <option value="">Select a category...</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.icon }} {{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="save_rule" value="1" id="rule_{{ transaction.id }}" checked>
+                                <label class="form-check-label small" for="rule_{{ transaction.id }}">
+                                    Always use for "{{ transaction.merchant_name or transaction.raw_name }}"
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">Save</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="text-center text-muted py-5">
+        <p class="fs-5">All transactions are categorized.</p>
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">Back to Dashboard</a>
+    </div>
+{% endif %}
+
+{% endblock %}
