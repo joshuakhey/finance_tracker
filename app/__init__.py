@@ -22,9 +22,4 @@ def create_app():
         app.register_blueprint(investments_bp)
         app.register_blueprint(sync_bp)
 
-        db.create_all()
-        
-        from .services.categorizer import seed_default_categories
-        seed_default_categories()
-
     return app
