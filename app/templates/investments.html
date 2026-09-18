@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Investments{% endblock %}
+{% block content %}
+
+<h4 class="mb-4">Investments</h4>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card p-3">
+            <div class="text-muted small">Total Value</div>
+            <div class="fs-4 fw-bold">${{ holdings_sum or 0 }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3">
+            <div class="text-muted small">Cost Basis</div>
+            <div class="fs-4 fw-bold">${{ cost_basis or 0 }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3">
+            <div class="text-muted small">Gain / Loss</div>
+            <div class="fs-4 fw-bold">${{ gain_loss or 0 }}</div>
+        </div>
+    </div>
+</div>
+
+{% for account in accounts %}
+<div class="card p-3 mb-3">
+    <h6 class="mb-3">{{ account.institution }} - {{ account.account_name }}
+        <span class="badge bg-secondary ms-2">{{ account.account_type.upper() }}</span>
+    </h6>
+    <table class="table table-sm mb-0">
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>Quantity</th>
+                <th>Avg Cost</th>
+                <th>Market Price</th>
+                <th>Market Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for holding in account.holdings %}
+            <tr>
+                <td class="fw-semibold">{{ holding.symbol }}</td>
+                <td>{{ holding.quantity }}</td>
+                <td>${{ holding.average_price }}</td>
+                <td>${{ holding.market_price }}</td>
+                <td>${{ holding.market_value }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="text-muted">No holdings found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p class="text-muted">No investment accounts connected yet.</p>
+{% endfor %}
+
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Sync{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">Sync</h4>
+    <form method="POST" action="{{ url_for('sync.call_sync') }}">
+        <button type="submit" class="btn btn-primary">Sync Now</button>
+    </form>
+</div>
+
+<div class="card p-3 mb-4">
+    <h6 class="mb-3">Connected Accounts</h6>
+    <table class="table table-sm mb-0">
+        <thead>
+            <tr>
+                <th>Institution</th>
+                <th>Account</th>
+                <th>Type</th>
+                <th>Provider</th>
+                <th>Last Synced</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for account in accounts %}
+            <tr>
+                <td>{{ account.institution }}</td>
+                <td>{{ account.account_name }}</td>
+                <td>{{ account.account_type }}</td>
+                <td><span class="badge bg-primary">{{ account.provider }}</span></td>
+                <td>{{ account.last_synced_at or 'Never' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="text-muted">No accounts connected yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card p-3">
+    <h6 class="mb-3">Sync History</h6>
+    <table class="table table-sm mb-0">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Provider</th>
+                <th>Status</th>
+                <th>Message</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in sync_logs %}
+            <tr>
+                <td class="small">{{ log.created_at }}</td>
+                <td class="small">{{ log.sync_type }}</td>
+                <td>
+                    <span class="badge {{ 'bg-success' if log.status == 'success' else 'bg-danger' }}">
+                        {{ log.status }}
+                    </span>
+                </td>
+                <td class="small text-muted">{{ log.message or '—' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" class="text-muted">No sync history yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
