@@ -55,6 +55,9 @@ def holdings_sync():
     count = 0
 
     for snaptrade_account in accounts:
+        if snaptrade_account.get('status') == 'closed':
+            continue
+
         account = Account.query.filter_by(
             external_id=snaptrade_account['id']
         ).first()
