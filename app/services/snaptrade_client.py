@@ -1,27 +1,59 @@
 import os
+import hmac
+import hashlib
+import time
+import json
 import requests
+from base64 import b64encode
 
 from ..models import db, Account, Holding
 
-def get_snaptrade_client():
-    return {
-        'userId': os.environ['SNAPTRADE_USER_ID'],
-        'userSecret': os.environ['SNAPTRADE_USER_SECRET'],
-        'clientId': os.environ['SNAPTRADE_CLIENT_ID'],
+BASE_URL = 'https://api.snaptrade.com/api/v1'
+
+
+def get_snaptrade_headers(path, body=None):
+    client_id = os.environ['SNAPTRADE_CLIENT_ID']
+    consumer_key = os.environ['SNAPTRADE_CONSUMER_KEY']
+    timestamp = str(int(time.time()))
+
+    query = f"clientId={client_id}&timestamp={timestamp}"
+
+    sig_object = {
+        "content": body,
+        "path": path,
+        "query": query,
     }
 
-def holdings_sync():
+    sig_content = json.dumps(sig_object, separators=(',', ':'), sort_keys=True)
+    sig_digest = hmac.new(
+        consumer_key.encode(),
+        sig_content.encode(),
+        hashlib.sha256
+    ).digest()
+    signature = b64encode(sig_digest).decode()
 
-    credentials = get_snaptrade_client()
-    BASE_URL = 'https://api.snaptrade.com/api/v1'
+    return {
+        "Signature": signature,
+        "Content-Type": "application/json",
+    }, {"clientId": client_id, "timestamp": timestamp}
+
+
+def holdings_sync():
+    path = "/api/v1/accounts"
+    headers, params = get_snaptrade_headers(path)
 
     response = requests.get(
-        f'{BASE_URL}/accounts',
-        params=credentials
+        f"{BASE_URL}/accounts",
+        params=params,
+        headers=headers,
     )
+
+    if not response.ok:
+        raise Exception(f"SnapTrade accounts fetch failed: {response.text}")
+
     accounts = response.json()
-    
     count = 0
+
     for snaptrade_account in accounts:
         account = Account.query.filter_by(
             external_id=snaptrade_account['id']
@@ -29,28 +61,36 @@ def holdings_sync():
         if account is None:
             continue
 
+        holdings_path = f"/api/v1/accounts/{snaptrade_account['id']}/holdings"
+        holdings_headers, holdings_params = get_snaptrade_headers(holdings_path)
+
         holdings_response = requests.get(
-            f'{BASE_URL}/accounts/{snaptrade_account["id"]}/holdings',
-            params=credentials
+            f"{BASE_URL}/accounts/{snaptrade_account['id']}/holdings",
+            params=holdings_params,
+            headers=holdings_headers,
         )
-    
+
+        if not holdings_response.ok:
+            continue
+
         for h in holdings_response.json():
-            # upsert by symbol + account.id
+            symbol = h.get('symbol', {}).get('symbol')
+            if not symbol:
+                continue
+
             holding = Holding.query.filter_by(
-                symbol=h['symbol'],
+                symbol=symbol,
                 account_id=account.id
             ).first()
             if holding is None:
-                holding = Holding(symbol=h['symbol']['symbol'], account_id=account.id)
+                holding = Holding(symbol=symbol, account_id=account.id)
                 db.session.add(holding)
 
-            # set fields matching your model
-            holding.quantity = h['units']
-            holding.average_price = h['average_purchase_price']
-            holding.market_price = h['price']
+            holding.quantity = h.get('units', 0)
+            holding.average_price = h.get('average_purchase_price', 0)
+            holding.market_price = h.get('price', 0)
             holding.market_value = holding.quantity * holding.market_price
             count += 1
 
     db.session.commit()
     return {'holdings': count}
-    
