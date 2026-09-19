@@ -107,7 +107,9 @@ def holdings_sync():
         if not holdings_response.ok:
             continue
 
-        for h in holdings_response.json():
+        response_data = holdings_response.json()
+        positions = response_data.get('positions', [])
+        for h in positions:
             symbol = h.get('symbol', {}).get('symbol')
             if not symbol:
                 continue
