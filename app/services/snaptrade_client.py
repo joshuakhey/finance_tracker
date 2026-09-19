@@ -5,6 +5,7 @@ import time
 import json
 import requests
 from base64 import b64encode
+from datetime import datetime
 
 from ..models import db, Account, Holding
 
@@ -65,6 +66,7 @@ def accounts_sync():
         account.is_investment = True
         account.account_category = 'investment'
 
+    account.last_synced_at = datetime.utcnow()
     db.session.commit()
 
 def holdings_sync():
