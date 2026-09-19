@@ -105,11 +105,11 @@ def holdings_sync():
             continue
 
         # Use the canonical path without /api/v1 prefix
-        positions_path = f"/accounts/{snaptrade_account['id']}/positions"
+        positions_path = f"/accounts/{snaptrade_account['id']}/positions/all"
         positions_headers, positions_params = get_snaptrade_headers(positions_path)
 
         positions_response = requests.get(
-            f"{BASE_URL}/accounts/{snaptrade_account['id']}/positions",
+            f"{BASE_URL}/accounts/{snaptrade_account['id']}/positions/all",
             params=positions_params,
             headers=positions_headers,
         )
