@@ -86,6 +86,7 @@ def holdings_sync():
     count = 0
 
     for snaptrade_account in accounts:
+        print(f"Processing: {snaptrade_account['id']} status: {snaptrade_account.get('status')}")
         if snaptrade_account.get('status') == 'closed':
             continue
 
