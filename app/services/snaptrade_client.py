@@ -102,7 +102,7 @@ def holdings_sync():
         holdings_headers, holdings_params = get_snaptrade_headers(holdings_path)
 
         holdings_response = requests.get(
-            f"{BASE_URL}/accounts/{snaptrade_account['id']}/positions"
+            f"{BASE_URL}/accounts/{snaptrade_account['id']}/positions",
             params=holdings_params,
             headers=holdings_headers,
         )
