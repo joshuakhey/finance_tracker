@@ -98,7 +98,7 @@ def holdings_sync():
         if account is None:
             continue
 
-        holdings_path = f"/api/v1/accounts/{snaptrade_account['id']}/holdings"
+        holdings_path = f"/api/v1/accounts/{snaptrade_account['id']}/positions"
         holdings_headers, holdings_params = get_snaptrade_headers(holdings_path)
 
         holdings_response = requests.get(
