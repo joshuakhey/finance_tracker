@@ -122,10 +122,10 @@ def holdings_sync():
             continue
 
         positions = positions_response.json().get('results', [])
-        
+
         for h in positions:
-            symbol_data = h.get('symbol', {})
-            symbol = symbol_data.get('symbol') or symbol_data.get('ticker')
+            instrument = h.get('instrument', {})
+            symbol = instrument.get('symbol') or instrument.get('raw_symbol')
             if not symbol:
                 continue
 
@@ -137,11 +137,11 @@ def holdings_sync():
                 holding = Holding(symbol=symbol, account_id=account.id)
                 db.session.add(holding)
 
-            holding.quantity = h.get('units', 0)
-            holding.average_price = h.get('average_purchase_price', 0)
-            holding.market_price = h.get('price', 0)
-            holding.market_value = float(holding.quantity or 0) * float(holding.market_price or 0)
-            holding.currency = h.get('currency', {}).get('code', 'CAD') if isinstance(h.get('currency'), dict) else h.get('currency', 'CAD')
+            holding.quantity = float(h.get('units', 0) or 0)
+            holding.average_price = float(h.get('cost_basis', 0) or 0)
+            holding.market_price = float(h.get('price', 0) or 0)
+            holding.market_value = holding.quantity * holding.market_price
+            holding.currency = h.get('currency', 'CAD')
             account.last_synced_at = datetime.utcnow()
             count += 1
 
