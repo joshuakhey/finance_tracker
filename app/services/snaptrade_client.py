@@ -38,6 +38,35 @@ def get_snaptrade_headers(path, body=None):
     }, {"clientId": client_id, "timestamp": timestamp}
 
 
+def accounts_sync():
+    path = "/api/v1/accounts"
+    headers, params = get_snaptrade_headers(path)
+    response = requests.get(f"{BASE_URL}/accounts", params=params, headers=headers)
+    
+    if not response.ok:
+        raise Exception(f"SnapTrade accounts fetch failed: {response.text}")
+
+    for snaptrade_account in response.json():
+        if snaptrade_account.get('status') == 'closed':
+            continue
+
+        account = Account.query.filter_by(
+            external_id=snaptrade_account['id']
+        ).first()
+        if account is None:
+            account = Account(external_id=snaptrade_account['id'])
+            db.session.add(account)
+
+        account.provider = 'snaptrade'
+        account.institution = snaptrade_account['institution_name']
+        account.account_name = snaptrade_account['name']
+        account.account_type = snaptrade_account['meta']['type']
+        account.currency = snaptrade_account['meta']['currency']
+        account.is_investment = True
+        account.account_category = 'investment'
+
+    db.session.commit()
+
 def holdings_sync():
     path = "/api/v1/accounts"
     headers, params = get_snaptrade_headers(path)
