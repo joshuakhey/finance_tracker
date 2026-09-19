@@ -83,6 +83,7 @@ def holdings_sync():
         raise Exception(f"SnapTrade accounts fetch failed: {response.text}")
 
     accounts = response.json()
+    print(f"RAW ACCOUNTS RESPONSE: {response.status_code} - {str(accounts)[:200]}")
     count = 0
 
     for snaptrade_account in accounts:
@@ -105,11 +106,6 @@ def holdings_sync():
             headers=holdings_headers,
         )
 
-        holdings_response = requests.get(
-            f"{BASE_URL}/accounts/{snaptrade_account['id']}/holdings",
-            params=holdings_params,
-            headers=holdings_headers,
-        )
         print(f"Account: {snaptrade_account['id']}")
         print(f"Status: {holdings_response.status_code}")
         print(f"Response: {holdings_response.text[:500]}")
