@@ -6,6 +6,7 @@ import json
 import requests
 from base64 import b64encode
 from datetime import datetime
+import sys
 
 from ..models import db, Account, Holding
 
@@ -83,7 +84,7 @@ def holdings_sync():
         raise Exception(f"SnapTrade accounts fetch failed: {response.text}")
 
     accounts = response.json()
-    print(f"RAW ACCOUNTS RESPONSE: {response.status_code} - {str(accounts)[:200]}")
+    print(f"RAW ACCOUNTS RESPONSE: {response.status_code} - {str(accounts)[:200]}", flush=True, file=sys.stderr)
     count = 0
 
     for snaptrade_account in accounts:
