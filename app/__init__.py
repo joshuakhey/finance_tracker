@@ -7,6 +7,7 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL',
         'sqlite:////mnt/JHardDrive/data/jheypicloud/files/Finances/fintrack.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 
     from .models import db
     db.init_app(app)
