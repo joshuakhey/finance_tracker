@@ -121,8 +121,8 @@ def holdings_sync():
         if not positions_response.ok:
             continue
 
-        positions = positions_response.json()
-
+        positions = positions_response.json().get('results', [])
+        
         for h in positions:
             symbol_data = h.get('symbol', {})
             symbol = symbol_data.get('symbol') or symbol_data.get('ticker')
