@@ -102,7 +102,7 @@ def holdings_sync():
         holdings_headers, holdings_params = get_snaptrade_headers(holdings_path)
 
         holdings_response = requests.get(
-            f"{BASE_URL}/accounts/{snaptrade_account['id']}/holdings",
+            f"{BASE_URL}/accounts/{snaptrade_account['id']}/positions"
             params=holdings_params,
             headers=holdings_headers,
         )
@@ -114,8 +114,7 @@ def holdings_sync():
         if not holdings_response.ok:
             continue
 
-        response_data = holdings_response.json()
-        positions = response_data.get('positions', [])
+        positions = holdings_response.json()
         for h in positions:
             symbol = h.get('symbol', {}).get('symbol')
             if not symbol:
