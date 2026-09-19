@@ -1,4 +1,5 @@
 import os
+import sys
 import hmac
 import hashlib
 import time
@@ -6,11 +7,10 @@ import json
 import requests
 from base64 import b64encode
 from datetime import datetime
-import sys
 
 from ..models import db, Account, Holding
 
-BASE_URL = 'https://api.snaptrade.com/api/v1'
+BASE_URL = 'https://api.snaptrade.com'
 
 
 def get_snaptrade_headers(path, body=None):
@@ -41,10 +41,15 @@ def get_snaptrade_headers(path, body=None):
 
 
 def accounts_sync():
-    path = "/api/v1/accounts"
+    path = "/accounts"
     headers, params = get_snaptrade_headers(path)
-    response = requests.get(f"{BASE_URL}/accounts", params=params, headers=headers)
-    
+
+    response = requests.get(
+        f"{BASE_URL}/accounts",
+        params=params,
+        headers=headers,
+    )
+
     if not response.ok:
         raise Exception(f"SnapTrade accounts fetch failed: {response.text}")
 
@@ -66,12 +71,13 @@ def accounts_sync():
         account.currency = snaptrade_account['meta']['currency']
         account.is_investment = True
         account.account_category = 'investment'
+        account.last_synced_at = datetime.utcnow()
 
-    account.last_synced_at = datetime.utcnow()
     db.session.commit()
 
+
 def holdings_sync():
-    path = "/api/v1/accounts"
+    path = "/accounts"
     headers, params = get_snaptrade_headers(path)
 
     response = requests.get(
@@ -88,7 +94,7 @@ def holdings_sync():
     count = 0
 
     for snaptrade_account in accounts:
-        print(f"Processing: {snaptrade_account['id']} status: {snaptrade_account.get('status')}")
+        print(f"Processing: {snaptrade_account['id']} status: {snaptrade_account.get('status')}", flush=True, file=sys.stderr)
         if snaptrade_account.get('status') == 'closed':
             continue
 
@@ -98,25 +104,28 @@ def holdings_sync():
         if account is None:
             continue
 
-        holdings_path = f"/api/v1/accounts/{snaptrade_account['id']}/positions"
-        holdings_headers, holdings_params = get_snaptrade_headers(holdings_path)
+        # Use the canonical path without /api/v1 prefix
+        positions_path = f"/accounts/{snaptrade_account['id']}/positions"
+        positions_headers, positions_params = get_snaptrade_headers(positions_path)
 
-        holdings_response = requests.get(
+        positions_response = requests.get(
             f"{BASE_URL}/accounts/{snaptrade_account['id']}/positions",
-            params=holdings_params,
-            headers=holdings_headers,
+            params=positions_params,
+            headers=positions_headers,
         )
 
-        print(f"Account: {snaptrade_account['id']}")
-        print(f"Status: {holdings_response.status_code}")
-        print(f"Response: {holdings_response.text[:500]}")
+        print(f"Account: {snaptrade_account['id']}", flush=True, file=sys.stderr)
+        print(f"Status: {positions_response.status_code}", flush=True, file=sys.stderr)
+        print(f"Response: {positions_response.text[:500]}", flush=True, file=sys.stderr)
 
-        if not holdings_response.ok:
+        if not positions_response.ok:
             continue
 
-        positions = holdings_response.json()
+        positions = positions_response.json()
+
         for h in positions:
-            symbol = h.get('symbol', {}).get('symbol')
+            symbol_data = h.get('symbol', {})
+            symbol = symbol_data.get('symbol') or symbol_data.get('ticker')
             if not symbol:
                 continue
 
@@ -131,7 +140,9 @@ def holdings_sync():
             holding.quantity = h.get('units', 0)
             holding.average_price = h.get('average_purchase_price', 0)
             holding.market_price = h.get('price', 0)
-            holding.market_value = holding.quantity * holding.market_price
+            holding.market_value = float(holding.quantity or 0) * float(holding.market_price or 0)
+            holding.currency = h.get('currency', {}).get('code', 'CAD') if isinstance(h.get('currency'), dict) else h.get('currency', 'CAD')
+            account.last_synced_at = datetime.utcnow()
             count += 1
 
     db.session.commit()
