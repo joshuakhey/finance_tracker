@@ -13,8 +13,8 @@ def sync_status():
     
     return render_template('sync.html', sync_logs=sync_logs, accounts=accounts)
 
-def save_sync_log(sync_type, account_id, status, message):
-    sync_log = SyncLog(sync_type=sync_type, account_id=account_id, status=status, message=message)
+def save_sync_log(sync_type, status, message):
+    sync_log = SyncLog(sync_type=sync_type, status=status, message=message)
     db.session.add(sync_log)
     db.session.commit()
 
